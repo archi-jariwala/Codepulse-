@@ -47,8 +47,9 @@ function App() {
   const connectWebSocket = () => {
     if (wsRef.current) wsRef.current.close();
 
-    // Hardcoding to ingest API on localhost:3000 as per docker compose
-    const ws = new WebSocket(`ws://localhost:3000/live?apiKey=${encodeURIComponent(apiKey)}`);
+    const ingestUrl = import.meta.env.VITE_INGEST_URL || 'http://localhost:3000';
+    const wsUrl = ingestUrl.replace(/^http/, 'ws');
+    const ws = new WebSocket(`${wsUrl}/live?apiKey=${encodeURIComponent(apiKey)}`);
 
     ws.onopen = () => setIsConnected(true);
     ws.onclose = () => setIsConnected(false);
@@ -103,7 +104,8 @@ function App() {
     try {
       const statsHeaders: any = {};
       if (apiKey) statsHeaders['x-api-key'] = apiKey;
-      const res = await fetch(`http://localhost:3000/stats?projectId=${projectId}&repo=${repo}&hours=24`, {
+      const ingestUrl = import.meta.env.VITE_INGEST_URL || 'http://localhost:3000';
+      const res = await fetch(`${ingestUrl}/stats?projectId=${projectId}&repo=${repo}&hours=24`, {
         headers: statsHeaders
       });
       if (res.ok) {
